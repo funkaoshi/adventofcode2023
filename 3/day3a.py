@@ -1,65 +1,63 @@
+from collections import defaultdict
+from typing import List, Tuple
+import sys
 
-# Read the "engine schematic" and replace new lines with "." to simplify processing
-with open("input.txt") as f:
+
+def check_adjacent_symbols(engine: List[str], x: int, y: int) -> List[Tuple[int, int]]:
+    # look for gears around the current position
+    above = y - 1 >= 0 and engine[y - 1][x] not in ".0123456789"
+    below = y + 1 < len(engine) and engine[y + 1][x]  not in ".0123456789"
+    current = engine[y][x] not in  ".0123456789"
+
+    return above or below or current
+
+
+filename = "input.txt" if not len(sys.argv) > 1 else sys.argv[1]
+
+with open(filename) as f:
     engine = [l.replace("\n", ".") for l in f.readlines()]
 
 # the list of valid parts we have found
 parts = []
 
-# state variables to track the current part we are reading and if it is valid
+# the current possible part number we are reading
 current_part = ""
+
+# tracks wether the part we are currently reading is adjacent to a symbol
 valid_part = False
 
 for y in range(len(engine)):
     for x in range(len(engine[y])):
-
-        # Process a new DIGIT
+        try:
+            next_char_is_digit = engine[y][x + 1] in "0123456789"
+        except IndexError:
+            next_char_is_digit = False
+        
         if engine[y][x] in "0123456789":
-            if not current_part and not valid_part:
-                # started reading a possible new part, check proceeding diagonals
-                sw = (
-                    x - 1 >= 0
-                    and y - 1 >= 0
-                    and engine[y - 1][x - 1] not in ".0123456789"
-                )
-                nw = (
-                    x - 1 >= 0
-                    and y < len(engine) - 1
-                    and engine[y + 1][x - 1] not in ".0123456789"
-                )
-                valid_part = nw or sw
-
-            # read a digit so include it in our current part tracker
             current_part += engine[y][x]
 
-        if current_part and not valid_part:
-            # check area around the part we are reading. We need to worry about
-            # the area above and below this line.
-            below = y - 1 >= 0 and engine[y - 1][x] not in ".0123456789"
-            above = y < len(engine) - 1 and engine[y + 1][x] not in ".0123456789"
-            valid_part = above or below
+        if current_part or next_char_is_digit:
+            # Look for any gears in the rectangle that surrounds a gear part.
+            valid_part = valid_part or check_adjacent_symbols(engine, x, y)
+        
+        if engine[y][x] not in "0123456789":
+            # read a period or symbol (., *, etc). Every line ends with a '.' so we will 
+            # always reset the current_part / valid_part state variables.
 
-        # Process a PERIOD
-        if engine[y][x] == ".":
             if current_part and valid_part:
                 # if we have read a part and it's adjacent to a symbol we store it
                 parts.append(current_part)
 
             # reset the valid part and current part values
             current_part = ""
-            valid_part = False
 
-        # Process a SYMBOL
-        if engine[y][x] not in ".0123456789":  # we have read a symbol
-            if current_part:
-                # save the part we have finished reading
-                parts.append(current_part)
+            if next_char_is_digit:
+               # reset to just the symbols adjacent to the next part
+               # TODO: called twice when starting a new part
+               valid_part = check_adjacent_symbols(engine, x, y)
+            else:
+                valid_part = False
 
-                # this symbol demarcates the end of the part string
-                current_part = ""
+total_parts = sum([int(part) for part in parts])
 
-            # this could be a valid for the next part
-            valid_part = True
-
-
-print(sum([int(part) for part in parts]))
+print(f"Total parts {total_parts}.")
