@@ -1,5 +1,4 @@
 import re
-from collections import defaultdict
 
 GAME_RE = re.compile("Game (\d+)")
 RED_RE = re.compile("(\d+) red")
@@ -30,10 +29,14 @@ with open("input.txt") as f:
             red_balls = int(red_balls[1]) if red_balls else 0
             blue_balls = int(blue_balls[1]) if blue_balls else 0
             green_balls = int(green_balls[1]) if green_balls else 0
-            
-            # if any of the balls exceed the maximum number of balls of that colour, 
+
+            # if any of the balls exceed the maximum number of balls of that colour,
             # the game is invalid.
-            if red_balls > MAX_RED_BALLS or blue_balls > MAX_BLUE_BALLS or green_balls > MAX_GREEN_BALLS:
+            if (
+                red_balls > MAX_RED_BALLS
+                or blue_balls > MAX_BLUE_BALLS
+                or green_balls > MAX_GREEN_BALLS
+            ):
                 valid_game = False
                 break
 

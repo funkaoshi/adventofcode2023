@@ -26,6 +26,7 @@ string_to_digit = {
     "nine": 9,
 }
 
+
 def extract_digits(line, regex):
     """Pull out the first and last numeric values found in line"""
     matches = regex.findall(line)
@@ -33,6 +34,7 @@ def extract_digits(line, regex):
     second = matches[-1]
     value = string_to_digit[first] * 10 + string_to_digit[second]
     return value
+
 
 with open("input.txt") as f:
     inputs = f.readlines()

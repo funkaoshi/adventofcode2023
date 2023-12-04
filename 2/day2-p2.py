@@ -17,7 +17,7 @@ with open("input.txt") as f:
     for line in f:
         game = line.split(":")
         game_num = int(GAME_RE.match(game[0]).group(1))
-        
+
         rounds = game[1].split(";")
 
         # track the minimum number of balls of each colour required for in each game
@@ -39,6 +39,8 @@ with open("input.txt") as f:
             if green_balls > minimum_balls["green"]:
                 minimum_balls["green"] = green_balls
 
-        powers.append(minimum_balls["red"] * minimum_balls["blue"] * minimum_balls["green"])
+        powers.append(
+            minimum_balls["red"] * minimum_balls["blue"] * minimum_balls["green"]
+        )
 
 print(sum(powers))
