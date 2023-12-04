@@ -37,7 +37,7 @@ for y in range(len(engine)):
             current_part += engine[y][x]
 
         if current_part or next_char_is_digit:
-            # Look for any gears in the rectangle that surrounds a gear part.
+            # As we read a part number we will check for adjacent symbols in the rectangle around it.
             valid_part = valid_part or check_adjacent_symbols(engine, x, y)
         
         if engine[y][x] not in "0123456789":
