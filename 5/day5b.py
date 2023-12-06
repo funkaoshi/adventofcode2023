@@ -19,8 +19,7 @@ class Mapping:
 def extract_mappings(header, lines, ranges):
     # extract mappings from lines and store values in ranges
     header = header.strip(" map:")
-    while True:
-        mapping = lines.pop(0).strip()
+    while mapping := lines.pop(0).strip():
         try:
             destination, source, length = mapping.split()
             ranges[header].append(Mapping(int(destination), int(source), int(length)))
@@ -70,7 +69,8 @@ def find_valid_locations(seed_ranges, ranges):
 
         for mapping_name in mapping_names:
             for current_range in current_ranges:
-                # walk through the mapping tables for each range of values we need to check
+                # walk through the mapping tables for each range of values we
+                # need to check
 
                 for mapping in ranges[mapping_name]:
                     valid_range = range_intersection(
@@ -91,8 +91,9 @@ def find_valid_locations(seed_ranges, ranges):
                         )
 
             if next_ranges:
-                # we found valid mappings, so use them when checking the next mapping table
-                # if next_ranges was empty, the original list of mappings just map to themselves.
+                # we found valid mappings, so use them when checking the next
+                # mapping table if next_ranges was empty, the original list of
+                # mappings just map to themselves.
                 current_ranges, next_ranges = next_ranges, []
 
         for current_range in current_ranges:

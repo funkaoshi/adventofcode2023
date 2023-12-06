@@ -1,4 +1,3 @@
-import sys
 import time
 from collections import defaultdict
 from dataclasses import dataclass
@@ -19,8 +18,7 @@ class Mapping:
 def extract_mappings(header, lines, ranges):
     # extract mappings from lines and store values in ranges
     header = header.strip(" map:")
-    while True:
-        mapping = lines.pop(0).strip()
+    while mapping := lines.pop(0).strip():
         try:
             destination, source, length = mapping.split()
             ranges[header].append(Mapping(int(destination), int(source), int(length)))
