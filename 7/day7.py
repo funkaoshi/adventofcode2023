@@ -3,9 +3,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Tuple
 
-# map card to its numeric value in the game
-card_values = {c: i for i, c in enumerate(list("23456789TJQKA"), start=2)}
-
 
 class HandType(Enum):
     FIVE_OF_A_KIND = 7
@@ -22,10 +19,13 @@ class HandBid:
     cards: str
     bid: int
 
+    # static variable stores map of card to its numeric value in the game
+    card_values = {c: i for i, c in enumerate(list("23456789TJQKA"), start=2)}
+
     def key(self, with_jokers=False) -> Tuple[int, Tuple]:
         """sort hand type, then by value of the cards in the order dealt"""
         values = tuple(
-            1 if with_jokers and card == "J" else card_values[card]
+            1 if with_jokers and card == "J" else HandBid.card_values[card]
             for card in self.cards
         )
         return (self.classify_hand(with_jokers).value, values)
@@ -35,7 +35,7 @@ class HandBid:
 
         # if we are playing with jokers remove them from the hand, then sort
         cards = self.cards.replace("J", "") if with_jokers else self.cards
-        cards = "".join(sorted(list(cards), key=lambda x: -card_values[x]))
+        cards = "".join(sorted(list(cards), key=lambda x: -HandBid.card_values[x]))
 
         # if we have fewer than 5 cards we have some number of wildcards.
         num_cards = len(cards)
