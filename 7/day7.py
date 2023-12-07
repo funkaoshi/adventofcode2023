@@ -1,7 +1,6 @@
 import sys
 from collections import Counter
 from dataclasses import dataclass
-from typing import List, Tuple
 
 HAND_SIZE = 5
 
@@ -14,7 +13,7 @@ class HandBid:
     # static variable stores map of card to its numeric value in the game
     card_values = {c: i for i, c in enumerate(list("23456789TJQKA"), start=2)}
 
-    def key(self, with_jokers=False) -> Tuple[Tuple, Tuple]:
+    def key(self, with_jokers=False) -> tuple[tuple, tuple]:
         """key used to sort HandBid"""
         # if we are playing with jokers they are worth 1 not 11.
         values = tuple(
@@ -23,7 +22,7 @@ class HandBid:
         )
         return (self.classify_hand(with_jokers), values)
 
-    def classify_hand(self, with_jokers: bool) -> Tuple:
+    def classify_hand(self, with_jokers: bool) -> tuple:
         """Classify a sorted set of cards into one of the 7 types of hands"""
 
         # if we are playing with jokers remove them from the hand
@@ -48,7 +47,7 @@ class HandBid:
         return tuple(card_groups)
 
 
-def load_hands(filename="input.txt") -> List[HandBid]:
+def load_hands(filename="input.txt") -> list[HandBid]:
     with open(filename) as f:
         lines = f.readlines()
 
@@ -60,7 +59,7 @@ def load_hands(filename="input.txt") -> List[HandBid]:
     return hands
 
 
-def score_game(hands: List[HandBid], with_jokers=False) -> int:
+def score_game(hands: list[HandBid], with_jokers=False) -> int:
     sorted_hands = sorted(hands, key=lambda x: x.key(with_jokers))
     total_winnings = [i * hand.bid for i, hand in enumerate(sorted_hands, start=1)]
     return sum(total_winnings)
