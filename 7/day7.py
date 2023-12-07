@@ -1,5 +1,7 @@
+import sys
 from dataclasses import dataclass
 from enum import Enum
+from typing import List
 
 # map card to its numeric value in the game
 card_values = {c: i for i, c in enumerate(list("23456789TJQKA"), start=2)}
@@ -18,12 +20,11 @@ class HandType(Enum):
 @dataclass
 class HandBid:
     cards: str
-    hand_type: HandType
     bid: int
-    rank: int = 0
-    winnings: int = 0
+    hand_type: HandType
 
     def key(self, with_jokers=False):
+        """sort hand type, then by value of the cards in the order dealt"""
         values = tuple(
             1 if with_jokers and card == "J" else card_values[card]
             for card in self.cards
@@ -130,20 +131,23 @@ def load_hands(filename="input.txt", with_jokers=False):
         )
         hand_type = classify_hand(sorted_cards)
 
-        hands.append(HandBid(cards, hand_type, int(bid)))
+        hands.append(HandBid(cards, int(bid), hand_type))
 
+    return hands
+
+
+def score_game(hands: List[HandBid], with_jokers=False) -> int:
     sorted_hands = sorted(hands, key=lambda x: x.key(with_jokers))
-    for i, hand in enumerate(sorted_hands, start=1):
-        hand.rank = i
-        hand.winnings = hand.rank * hand.bid
-
-    return sorted_hands
+    total_winnings = [i * hand.bid for i, hand in enumerate(sorted_hands, start=1)]
+    return sum(total_winnings)
 
 
-problem_one_winnings = sum([hand.winnings for hand in load_hands("input.txt")])
+filename = "input.txt" if len(sys.argv) == 1 else sys.argv[1]
+
+hands = load_hands(filename)
+problem_one_winnings = score_game(hands)
 print(f"Problem 1: {problem_one_winnings} - {problem_one_winnings == 250058342}")
 
-problem_two_winnings = sum(
-    [hand.winnings for hand in load_hands("input.txt", with_jokers=True)]
-)
+hands = load_hands(filename, with_jokers=True)
+problem_two_winnings = score_game(hands, with_jokers=True)
 print(f"Problem 2: {problem_two_winnings} - {problem_two_winnings == 250506580}")
