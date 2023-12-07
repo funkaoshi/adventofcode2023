@@ -1,21 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
 
-card_values = {
-    "A": 14,
-    "K": 13,
-    "Q": 12,
-    "J": 11,
-    "T": 10,
-    "9": 9,
-    "8": 8,
-    "7": 7,
-    "6": 6,
-    "5": 5,
-    "4": 4,
-    "3": 3,
-    "2": 2,
-}
+# map card to its numeric value in the game
+card_values = {c: i for i, c in enumerate(list("23456789TJQKA"), start=2)}
 
 
 class HandType(Enum):
@@ -155,9 +142,9 @@ def load_hands(filename="input.txt", with_jokers=False):
 
 
 problem_one_winnings = sum([hand.winnings for hand in load_hands("input.txt")])
-print(f"Problem 1: {problem_one_winnings}")
+print(f"Problem 1: {problem_one_winnings == 250058342}")
 
 problem_two_winnings = sum(
     [hand.winnings for hand in load_hands("input.txt", with_jokers=True)]
 )
-print(f"Problem 2: {problem_two_winnings}")
+print(f"Problem 2: {problem_two_winnings == 250506580}")
