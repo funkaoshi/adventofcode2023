@@ -18,11 +18,17 @@ class HandType(Enum):
 @dataclass
 class HandBid:
     cards: str
-    cards_values: list[int]
     hand_type: HandType
     bid: int
     rank: int = 0
     winnings: int = 0
+
+    def key(self, with_jokers=False):
+        values = tuple(
+            1 if with_jokers and card == "J" else card_values[card]
+            for card in self.cards
+        )
+        return (self.hand_type.value, values)
 
 
 def classify_hand(cards):
@@ -117,12 +123,6 @@ def load_hands(filename="input.txt", with_jokers=False):
     for line in lines:
         cards, bid = line.split()
 
-        # convert cards into their values for sorting later. If we are playing with
-        # jokers then their value is 1, not 11.
-        cards_values = [
-            1 if with_jokers and card == "J" else card_values[card] for card in cards
-        ]
-
         # classify the hand: if we are playing with jokers then we remove them first.
         classify_cards = cards.replace("J", "") if with_jokers else cards
         sorted_cards = "".join(
@@ -130,9 +130,9 @@ def load_hands(filename="input.txt", with_jokers=False):
         )
         hand_type = classify_hand(sorted_cards)
 
-        hands.append(HandBid(cards, cards_values, hand_type, int(bid)))
+        hands.append(HandBid(cards, hand_type, int(bid)))
 
-    sorted_hands = sorted(hands, key=lambda x: (x.hand_type.value, x.cards_values))
+    sorted_hands = sorted(hands, key=lambda x: x.key(with_jokers))
     for i, hand in enumerate(sorted_hands, start=1):
         hand.rank = i
         hand.winnings = hand.rank * hand.bid
@@ -141,9 +141,9 @@ def load_hands(filename="input.txt", with_jokers=False):
 
 
 problem_one_winnings = sum([hand.winnings for hand in load_hands("input.txt")])
-print(f"Problem 1: {problem_one_winnings == 250058342}")
+print(f"Problem 1: {problem_one_winnings} - {problem_one_winnings == 250058342}")
 
 problem_two_winnings = sum(
     [hand.winnings for hand in load_hands("input.txt", with_jokers=True)]
 )
-print(f"Problem 2: {problem_two_winnings == 250506580}")
+print(f"Problem 2: {problem_two_winnings} - {problem_two_winnings == 250506580}")
