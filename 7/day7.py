@@ -1,17 +1,9 @@
 import sys
+from collections import Counter
 from dataclasses import dataclass
-from enum import Enum
 from typing import List, Tuple
 
-
-class HandType(Enum):
-    FIVE_OF_A_KIND = 7
-    FOUR_OF_A_KIND = 6
-    FULL_HOUSE = 5
-    TRIPPLE = 4
-    TWO_PAIR = 3
-    PAIR = 2
-    HIGH_CARD = 1
+HAND_SIZE = 5
 
 
 @dataclass
@@ -22,102 +14,38 @@ class HandBid:
     # static variable stores map of card to its numeric value in the game
     card_values = {c: i for i, c in enumerate(list("23456789TJQKA"), start=2)}
 
-    def key(self, with_jokers=False) -> Tuple[int, Tuple]:
+    def key(self, with_jokers=False) -> Tuple[Tuple, Tuple]:
         """key used to sort HandBid"""
         # if we are playing with jokers they are worth 1 not 11.
         values = tuple(
             1 if with_jokers and card == "J" else HandBid.card_values[card]
             for card in self.cards
         )
-        return (self.classify_hand(with_jokers).value, values)
+        return (self.classify_hand(with_jokers), values)
 
-    def classify_hand(self, with_jokers: bool) -> HandType:
+    def classify_hand(self, with_jokers: bool) -> Tuple:
         """Classify a sorted set of cards into one of the 7 types of hands"""
 
-        # if we are playing with jokers remove them from the hand, then sort
+        # if we are playing with jokers remove them from the hand
         cards = self.cards.replace("J", "") if with_jokers else self.cards
-        cards = "".join(sorted(list(cards), key=lambda x: -HandBid.card_values[x]))
 
-        # if we have fewer than 5 cards we have some number of wildcards.
-        num_cards = len(cards)
+        # group are cards into matching sets, i.e. 22KKA -> (2, 2, 1). Shout out
+        # to Victor for pointing out this simpler approach to classifying hands!
+        card_groups = sorted(
+            [count for _, count in Counter(cards).items()], reverse=True
+        )
+        if not card_groups:
+            # handle the case we have nothing but wildcards
+            card_groups = [0]
 
-        if num_cards == 0 or num_cards == 1:
-            # we have all jokers, or one card and 4 jokers, so we can make a
-            # five of a kind.
-            return HandType.FIVE_OF_A_KIND
+        # if we have fewer than 5 cards we have some wildcards. because this
+        # is a simpler version of poker, we can improve our hand by simply
+        # increase the size of our first match group: (2,2) -> (3,2);
+        # (1,) -> (5,), (1,1,1,1) -> (2,1,1,1), etc.
+        wildcards = HAND_SIZE - len(cards)
+        card_groups[0] = card_groups[0] + wildcards
 
-        if num_cards == 2:
-            # we have 3 jokers, so we can turn a pair into a five of a kind,
-            # or anything else into a four of a kind.
-            if cards[0] == cards[1]:
-                return HandType.FIVE_OF_A_KIND
-            else:
-                return HandType.FOUR_OF_A_KIND
-
-        if num_cards == 3:
-            # we have 2 jokers, so we can turn a tripple into a five of a kind, a pair
-            # into a four of a kind, or anything else into a three of a kind.
-            if cards[0] == cards[2]:
-                return HandType.FIVE_OF_A_KIND
-            elif cards[0] == cards[1] or cards[1] == cards[2]:
-                return HandType.FOUR_OF_A_KIND
-            else:
-                return HandType.TRIPPLE
-
-        if num_cards == 4:
-            if cards[0] == cards[3]:
-                # Four of a kind becomes five of a kind
-                return HandType.FIVE_OF_A_KIND
-            elif cards[0] == cards[2] or cards[1] == cards[3]:
-                # Three of a kind becomes four of a kind
-                return HandType.FOUR_OF_A_KIND
-            elif cards[0] == cards[1] and cards[2] == cards[3]:
-                # Two pair becomes a full house
-                return HandType.FULL_HOUSE
-            elif cards[0] == cards[1] or cards[1] == cards[2] or cards[2] == cards[3]:
-                # One pair becomes three of a kind
-                return HandType.TRIPPLE
-            else:
-                return HandType.PAIR
-
-        # ... else we have no wild cards
-
-        if cards[0] == cards[4]:
-            # first and last card are the same, so all cards are the same
-            return HandType.FIVE_OF_A_KIND
-        elif cards[0] == cards[3] or cards[1] == cards[4]:
-            # first 4 or last 4 cards are the same, so 4 cards are the same
-            return HandType.FOUR_OF_A_KIND
-        elif (
-            cards[0] == cards[1]
-            and cards[2] == cards[4]
-            or cards[0] == cards[2]
-            and cards[3] == cards[4]
-        ):
-            # first 2 and last 3 or first 3 and last 2 cards are the same,
-            # so we have a full house.
-            return HandType.FULL_HOUSE
-        elif cards[0] == cards[2] or cards[1] == cards[3] or cards[2] == cards[4]:
-            # first 3, middle 3, or last 3 cards are the same, so 3 cards are the same
-            return HandType.TRIPPLE
-        elif (
-            cards[0] == cards[1]
-            and cards[2] == cards[3]
-            or cards[1] == cards[2]
-            and cards[3] == cards[4]
-            or cards[0] == cards[1]
-            and cards[3] == cards[4]
-        ):
-            return HandType.TWO_PAIR
-        elif (
-            cards[0] == cards[1]
-            or cards[1] == cards[2]
-            or cards[2] == cards[3]
-            or cards[3] == cards[4]
-        ):
-            return HandType.PAIR
-        else:
-            return HandType.HIGH_CARD
+        return tuple(card_groups)
 
 
 def load_hands(filename="input.txt") -> List[HandBid]:
