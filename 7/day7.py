@@ -23,7 +23,8 @@ class HandBid:
     card_values = {c: i for i, c in enumerate(list("23456789TJQKA"), start=2)}
 
     def key(self, with_jokers=False) -> Tuple[int, Tuple]:
-        """sort hand type, then by value of the cards in the order dealt"""
+        """key used to sort HandBid"""
+        # if we are playing with jokers they are worth 1 not 11.
         values = tuple(
             1 if with_jokers and card == "J" else HandBid.card_values[card]
             for card in self.cards
@@ -119,7 +120,7 @@ class HandBid:
             return HandType.HIGH_CARD
 
 
-def load_hands(filename="input.txt", with_jokers=False) -> List[HandBid]:
+def load_hands(filename="input.txt") -> List[HandBid]:
     with open(filename) as f:
         lines = f.readlines()
 
@@ -140,9 +141,9 @@ def score_game(hands: List[HandBid], with_jokers=False) -> int:
 filename = "input.txt" if len(sys.argv) == 1 else sys.argv[1]
 
 hands = load_hands(filename)
-problem_one_winnings = score_game(hands)
-print(f"Problem 1: {problem_one_winnings} - {problem_one_winnings == 250058342}")
 
-hands = load_hands(filename, with_jokers=True)
+problem_one_winnings = score_game(hands)
 problem_two_winnings = score_game(hands, with_jokers=True)
+
+print(f"Problem 1: {problem_one_winnings} - {problem_one_winnings == 250058342}")
 print(f"Problem 2: {problem_two_winnings} - {problem_two_winnings == 250506580}")
