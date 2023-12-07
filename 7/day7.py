@@ -18,7 +18,6 @@ class HandType(Enum):
 @dataclass
 class HandBid:
     cards: str
-    sorted_cards: str
     cards_values: list[int]
     hand_type: HandType
     bid: int
@@ -131,7 +130,7 @@ def load_hands(filename="input.txt", with_jokers=False):
         )
         hand_type = classify_hand(sorted_cards)
 
-        hands.append(HandBid(cards, sorted_cards, cards_values, hand_type, int(bid)))
+        hands.append(HandBid(cards, cards_values, hand_type, int(bid)))
 
     sorted_hands = sorted(hands, key=lambda x: (x.hand_type.value, x.cards_values))
     for i, hand in enumerate(sorted_hands, start=1):
