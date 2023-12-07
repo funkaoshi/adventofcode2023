@@ -5,6 +5,7 @@ card_values = {
     "A": 14,
     "K": 13,
     "Q": 12,
+    "J": 11,
     "T": 10,
     "9": 9,
     "8": 8,
@@ -14,7 +15,6 @@ card_values = {
     "4": 4,
     "3": 3,
     "2": 2,
-    "J": 11,
 }
 
 
@@ -130,12 +130,15 @@ def load_hands(filename="input.txt", with_jokers=False):
     hands = []
     for line in lines:
         cards, bid = line.split()
+
+        # convert cards into their values for sorting later. If we are playing with
+        # jokers then their value is 1, not 11.
         cards_values = [
             1 if with_jokers and card == "J" else card_values[card] for card in cards
         ]
 
+        # classify the hand: if we are playing with jokers then we remove them first.
         classify_cards = cards.replace("J", "") if with_jokers else cards
-
         sorted_cards = "".join(
             sorted(list(classify_cards), key=lambda x: -card_values[x])
         )
