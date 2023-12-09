@@ -1,4 +1,5 @@
 import sys
+from itertools import pairwise
 
 
 def find_sequence_differences(sequence: list[int]) -> dict[int, list[int]]:
@@ -6,8 +7,7 @@ def find_sequence_differences(sequence: list[int]) -> dict[int, list[int]]:
     sequence_differences = {level: sequence}
     while True:
         sequence_differences[level + 1] = [
-            sequence_differences[level][i + 1] - sequence_differences[level][i]
-            for i in range(len(sequence_differences[level]) - 1)
+            y - x for x, y in pairwise(sequence_differences[level])
         ]
 
         if all(i == 0 for i in sequence_differences[level + 1]):
