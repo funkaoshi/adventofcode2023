@@ -1,7 +1,7 @@
 import sys
 
 
-def find_sequence_differences(sequence: list[str]) -> dict[int, list[int]]:
+def find_sequence_differences(sequence: list[int]) -> dict[int, list[int]]:
     level = 0
     sequence_differences = {level: sequence}
     while True:
@@ -22,10 +22,7 @@ def find_next_value(sequence_differences: dict[int, list[int]]) -> int:
     for i in range(len(sequence_differences) - 1, 0, -1):
         top_element = sequence_differences[i][-1]
         last_element = sequence_differences[i - 1][-1]
-        print(f"{top_element=}, {last_element=}")
         sequence_differences[i - 1].append(last_element + top_element)
-
-    print(f"Next value: {sequence_differences[0][-1]}")
 
     return sequence_differences[0][-1]
 
