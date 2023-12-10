@@ -46,26 +46,39 @@ def get_adjacency_list(node: Node, value: str) -> list[Node]:
             return []
 
     # we have encountered an unknown symbol in our input
+    print(f"Unknown symbol {value} at {node}")
     raise Exception
 
 
 def update_adjacent_to_node(node: Node, adjacency_graph: AdjacencyGraph):
     """determine nodes adjacency list to node via the nodes that abut it."""
     for location in get_abutting_nodes(node):
-        if node in adjacency_graph[location]:
-            adjacency_graph[node].append(location)
+        try:
+            if node in adjacency_graph[location]:
+                adjacency_graph[node].append(location)
+        except KeyError:
+            pass
 
     # a node can only be adjacent to two other nodes
     if len(adjacency_graph[node]) > 2:
         raise Exception
 
 
-def make_graph(pipemap: list[str]) -> tuple[Node, AdjacencyGraph]:
+def make_graph(pipemap: list[list[str]]) -> tuple[Node, AdjacencyGraph]:
     """covert our input into a graph"""
+
+    def valid_node(node: Node) -> bool:
+        i, j = node
+        return i >= 0 and j >= 0 and i < len(pipemap) and j < len(pipemap[0])
+
     adjacency_graph: AdjacencyGraph = {}
     for i, row in enumerate(pipemap):
         for j, node in enumerate(row):
-            adjacency_graph[(i, j)] = get_adjacency_list((i, j), node)
+            adjacenct_nodes = [
+                node for node in get_adjacency_list((i, j), node) if valid_node(node)
+            ]
+
+            adjacency_graph[(i, j)] = adjacenct_nodes
 
             if node == "S":
                 start = (i, j)
@@ -99,11 +112,21 @@ def find_furthest_node(start: Node, adjacency_graph: AdjacencyGraph) -> dict[Nod
     return distances
 
 
+def print_map(pipemap: list[list[str]]):
+    for row in pipemap:
+        print(row)
+
+
 filename = "input.txt" if len(sys.argv) == 1 else sys.argv[1]
 
 with open(filename) as f:
-    pipemap = f.read().splitlines()
+    file = f.read().splitlines()
+
+pipemap = [list(row) for row in file]
+
+print_map(pipemap)
 
 start, adjacency_graph = make_graph(pipemap)
 distances = find_furthest_node(start, adjacency_graph)
-print(max(distances.values()))
+
+print(f"Longest path is {max(distances.values())}.")
