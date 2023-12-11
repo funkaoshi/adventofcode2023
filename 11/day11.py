@@ -1,8 +1,6 @@
 import argparse
 import itertools
 
-from loguru import logger
-
 Point = tuple[int, int]
 
 
@@ -33,21 +31,19 @@ class GalaxyMap:
         ]
 
     def distance(self, a: Point, b: Point):
+        # arange the vertical and horizontal points low to high
         h_a, h_b = sorted([a[1], b[1]])
         v_a, v_b = sorted([a[0], b[0]])
 
+        # how many expanded rows/cols are between the two points?
         expand_h = len([i for i in self._expanded_cols if i in range(h_a, h_b)])
         expand_v = len([i for i in self._expanded_rows if i in range(v_a, v_b)])
 
+        # horizontal/virtical distance between two points is ...
+        #  the difference between the two points, minus the number of points we
+        #  need to expand, and then adding in the missing points expanded.
         horizontal_distance = h_b - h_a - expand_h + self.expansion_amount * expand_h
         vertical_distance = v_b - v_a - expand_v + self.expansion_amount * expand_v
-
-        logger.debug(
-            f"{a} -> {b} -> {horizontal_distance} + {vertical_distance} = "
-            f"{horizontal_distance + vertical_distance}"
-        )
-        logger.debug(f" -> expand_h: {expand_h}")
-        logger.debug(f" -> expand_v: {expand_v}")
 
         return vertical_distance + horizontal_distance
 
@@ -70,12 +66,11 @@ if __name__ == "__main__":
     filename = args.filename
     expansion_amount = int(args.expansion_amount)
 
-    logger.debug(f"{filename=}, {expansion_amount=}")
-
     with open(filename) as f:
         image = [list(row) for row in f.read().splitlines()]
 
     galaxy_map = GalaxyMap(image, expansion_amount)
+
     distances = galaxy_map.calculate_all_path_shortest_distances()
 
-    logger.info(sum(value for value in distances.values()))
+    print(sum(value for value in distances.values()))
