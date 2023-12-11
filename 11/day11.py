@@ -1,65 +1,81 @@
+import argparse
 import itertools
-import sys
 
-GalaxyMap = list[list[str]]
-Node = tuple[int, int]
+from loguru import logger
 
-filename = "input.txt" if len(sys.argv) == 1 else sys.argv[1]
-
-with open(filename) as f:
-    file = f.read().splitlines()
-
-galaxy_map = [list(row) for row in file]
+Point = tuple[int, int]
 
 
-def expanded_galaxy_map(galaxy: GalaxyMap) -> GalaxyMap:
-    expanded_rows = []
-    for row in galaxy:
-        expanded_rows.append(row)
-        if "#" not in row:
-            expanded_rows.append(row)
+class GalaxyMap:
+    def __init__(self, image: list[list[str]], expansion_amount: int):
+        self.image = image
+        self.expansion_amount = expansion_amount
+        self.galaxies = self.get_galaxies()
+        self._expanded_rows = self.get_expanded_rows()
+        self._expanded_cols = self.get_expanded_cols()
 
-    return expanded_rows
+    def get_galaxies(self) -> list[Point]:
+        return [
+            (i, j)
+            for i in range(len(self.image))
+            for j in range(len(self.image[i]))
+            if self.image[i][j] == "#"
+        ]
+
+    def get_expanded_rows(self) -> list[int]:
+        return [i for i in range(len(self.image)) if "#" not in self.image[i]]
+
+    def get_expanded_cols(self) -> list[int]:
+        return [
+            i
+            for i in range(len(self.image[0]))
+            if "#" not in [row[i] for row in self.image]
+        ]
+
+    def distance(self, a: Point, b: Point):
+        h_a, h_b = sorted([a[1], b[1]])
+        v_a, v_b = sorted([a[0], b[0]])
+
+        expand_h = len([i for i in self._expanded_cols if i in range(h_a, h_b)])
+        expand_v = len([i for i in self._expanded_rows if i in range(v_a, v_b)])
+
+        horizontal_distance = h_b - h_a - expand_h + self.expansion_amount * expand_h
+        vertical_distance = v_b - v_a - expand_v + self.expansion_amount * expand_v
+
+        logger.debug(
+            f"{a} -> {b} -> {horizontal_distance} + {vertical_distance} = "
+            f"{horizontal_distance + vertical_distance}"
+        )
+        logger.debug(f" -> expand_h: {expand_h}")
+        logger.debug(f" -> expand_v: {expand_v}")
+
+        return vertical_distance + horizontal_distance
+
+    def calculate_all_path_shortest_distances(self):
+        return {
+            pairs: self.distance(*pairs)
+            for pairs in itertools.combinations(self.galaxies, 2)
+        }
+
+    def __str__(self) -> str:
+        return "\n".join("".join(row) for row in self.image)
 
 
-def rotate_galaxy_map(galaxy: GalaxyMap) -> GalaxyMap:
-    rotated_galaxy_map = []
-    for i in range(len(galaxy[0])):
-        rotated_row = []
-        for j in range(len(galaxy)):
-            rotated_row.append(galaxy[j][i])
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--filename", action="store", default="input.txt")
+    parser.add_argument("-n", "--expansion_amount", action="store", default=1000000)
+    args = parser.parse_args()
 
-        rotated_galaxy_map.append(rotated_row)
+    filename = args.filename
+    expansion_amount = int(args.expansion_amount)
 
-    return rotated_galaxy_map
+    logger.debug(f"{filename=}, {expansion_amount=}")
 
+    with open(filename) as f:
+        image = [list(row) for row in f.read().splitlines()]
 
-def get_galaxies(galaxy_map: GalaxyMap) -> list[Node]:
-    return [
-        (i, j)
-        for i in range(len(galaxy_map))
-        for j in range(len(galaxy_map[i]))
-        if galaxy_map[i][j] == "#"
-    ]
+    galaxy_map = GalaxyMap(image, expansion_amount)
+    distances = galaxy_map.calculate_all_path_shortest_distances()
 
-
-def manhattan_distance(node1: Node, node2: Node) -> int:
-    return abs(node1[0] - node2[0]) + abs(node1[1] - node2[1])
-
-
-def calculate_all_path_shortest_distances(galaxies: list[Node]):
-    distances = []
-    for pairs in itertools.combinations(galaxies, 2):
-        distances.append((pairs, manhattan_distance(*pairs)))
-    return distances
-
-
-# add extra rows/columns to the star map
-galaxy_map = expanded_galaxy_map(galaxy_map)
-galaxy_map = expanded_galaxy_map(rotate_galaxy_map(galaxy_map))
-galaxy_map = rotate_galaxy_map(galaxy_map)
-
-galaxies = get_galaxies(galaxy_map)
-distances = calculate_all_path_shortest_distances(galaxies)
-print(len(distances))
-print(sum(value[1] for value in distances))
+    logger.info(sum(value for value in distances.values()))
