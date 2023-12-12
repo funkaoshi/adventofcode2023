@@ -14,25 +14,6 @@ class ConditionRecord:
     damaged_springs: list[str]
 
 
-def valid_spring_combinations(spring_status: str, damaged_springs: list[str]):
-    if "?" in spring_status:
-        return False
-
-    for count in damaged_springs:
-        bad_springs = "#" * int(count)
-        location = spring_status.find(bad_springs)
-        if location == -1:
-            return False
-
-        spring_status = spring_status[location + len(bad_springs) :]
-
-    if "#" in spring_status:
-        # we still have some broken springs left
-        return False
-
-    return True
-
-
 # map of spring_status & list of damaged_springs -> number of arrangements
 arrangement_cache = {}
 
@@ -65,10 +46,9 @@ def broken_spring_combinations(spring_status: str, damaged_springs: list[str], l
         if start > 0 and spring_status[start - 1] == "#":
             continue
 
-        # We handle this case in the recursion call, but could stop right now
-        # if we like
-        # if len(spring_status[end + 1 :]) == 0 and len(damaged_springs[1:]) > 0:
-        #    continue
+        # We handle this case in the recursion call, but may as well also stop now
+        if len(spring_status[end + 1 :]) == 0 and len(damaged_springs[1:]) > 0:
+            continue
 
         # we have found a spot X broken springs could fit, followed by an end
         # of line, "." or a "?". We skip that spot as it can't be a broken
@@ -78,6 +58,8 @@ def broken_spring_combinations(spring_status: str, damaged_springs: list[str], l
             arrangement_cache[key] = broken_spring_combinations(
                 spring_status[end + 1 :], damaged_springs[1:], level + 1
             )
+        else:
+            print(f"{'  ' * level} - Cache hit for {key} = {arrangement_cache[key]}")
 
         arrangements += arrangement_cache[key]
 
