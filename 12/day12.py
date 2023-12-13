@@ -18,14 +18,9 @@ class ConditionRecord:
 arrangement_cache = {}
 cache_hits = 0
 
+
 # compile one regex for each size of contiguous damaged springs we encounter.
 regex_cache = {}
-
-
-def make_key(spring_status: str, damaged_springs: list[str]):
-    global cache_hits
-    cache_hits += 1
-    return f"{spring_status}||{damaged_springs}"
 
 
 def broken_spring_combinations(spring_status: str, damaged_springs: list[str]) -> int:
@@ -66,12 +61,15 @@ def broken_spring_combinations(spring_status: str, damaged_springs: list[str]) -
         # We have a valid match. The next value must be a '." or the end of the string,
         # so we assume as much when continuing on in finding our arrangements. (We will
         # turn a '?' into a '.')
-        key = make_key(spring_status[end + 1 :], damaged_springs[1:])
+        key = f"{spring_status[end + 1 :]}||{damaged_springs[1:]}"
         if key not in arrangement_cache:
             arrangement_cache[key] = broken_spring_combinations(
                 spring_status[end + 1 :],
                 damaged_springs[1:],
             )
+        else:
+            global cache_hits
+            cache_hits += 1
 
         arrangements += arrangement_cache[key]
 
