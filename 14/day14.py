@@ -1,24 +1,68 @@
 import argparse
+import enum
+import functools
 import re
+
+
+class Direction(enum.Enum):
+    NORTH = 0
+    SOUTH = 1
+    EAST = 2
+    WEST = 3
+
 
 rock_re = re.compile(r"([O.]+)|(#+)")
 
 
-def tilt(rocks):
+@functools.cache
+def cycle(rocks: str) -> str:
+    for direction in [Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.EAST]:
+        # Perform operations with the direction
+        rocks = tilt(rocks, direction)
+    return rocks
+
+
+@functools.cache
+def tilt(rocks_str: str, direction: Direction) -> str:
+    # We pass around strings rather tha lists so we can cache our results
+    rocks = rocks_str.strip().split("\n")
+
+    # transform the rocks array so we are always looking at a row of rocks
+    # and shifting rocks to the start of those rows.
+    rocks = transform_rocks(rocks, direction)
+
     tilted_rocks = []
     for row in rocks:
         s = ""
-        for r in rock_re.finditer(row):
-            r = r.group()
+        for match in rock_re.finditer(row):
+            r = match.group()
             count = r.count("O")
             if count:
                 r = "O" * count + "." * (len(r) - count)
             s += r
         tilted_rocks.append(s)
-    return tilted_rocks
+
+    # restore the correct orientation of the rocks
+    rocks = transform_rocks(tilted_rocks, direction, undo=True)
+
+    return "\n".join(rocks)
 
 
-def rotate_rocks(rocks):
+def transform_rocks(rocks: list[str], direction: Direction, undo=False):
+    if direction == Direction.NORTH:
+        return rotate_rocks_north_tilt(rocks)
+    elif direction == Direction.SOUTH:
+        return rotate_rocks_south_tilt(rocks, undo)
+    elif direction == Direction.EAST:
+        return flip_rocks_east_tilt(rocks)
+    elif direction == Direction.WEST:
+        # already correctly oriented for operating on rows
+        return rocks
+
+    raise Exception
+
+
+def rotate_rocks_north_tilt(rocks):
     rotated_rocks = []
     for i in range(len(rocks[0])):
         col = [rocks[j][i] for j in range(len(rocks))]
@@ -26,28 +70,65 @@ def rotate_rocks(rocks):
     return rotated_rocks
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--filename", action="store", default="input.txt")
-    args = parser.parse_args()
+def rotate_rocks_south_tilt(rocks, undo=False):
+    rotated_rocks = []
+    if undo:
+        for i in range(len(rocks[0]) - 1, -1, -1):
+            col = [rocks[j][i] for j in range(len(rocks))]
+            rotated_rocks.append("".join(col))
+    else:
+        for i in range(len(rocks[0])):
+            col = [rocks[j][i] for j in range(len(rocks))]
+            rotated_rocks.append("".join(reversed(col)))
+    return rotated_rocks
 
-    filename = args.filename
 
-    with open(filename) as f:
-        rocks = f.read().splitlines()
+def flip_rocks_east_tilt(rocks):
+    return ["".join(reversed(row)) for row in rocks]
 
-    # we rotate the input so we can work on rows rather than columns
-    rocks = rotate_rocks(rocks)
 
+def calculate_max_load(rocks: list[str]) -> int:
+    max_load = len(rocks)
+    return sum([max_load - i for row in rocks for i, c in enumerate(row) if c == "O"])
+
+
+def calculate_max_load_north_tilt(rocks_str: str) -> int:
     # "tilt" the platform so the rocks move "north"
-    rocks = tilt(rocks)
+    rocks_str = tilt(rocks_str, Direction.NORTH)
 
     # load is the distance from the bottom of the platform, or in our case the
     # start of the string, so we can simply note the location of the rock and
     # subtrack that from the length of the string.
-    max_load = len(rocks)
-    total_load = sum(
-        [max_load - i for row in rocks for i, c in enumerate(row) if c == "O"]
-    )
+    rocks = rotate_rocks_north_tilt(rocks_str.split("\n"))
 
-    print(total_load)
+    return calculate_max_load(rocks)
+
+
+def calculate_max_load_after_cycles(rocks_str: str, cycles=1000000000) -> int:
+    for i in range(cycles):
+        rocks_str = cycle(rocks_str)
+
+        if i % 100000000 == 0:
+            print(f"Processed {i} of {cycles} iterations, {cycles - i} remaining.")
+
+    # rotate our result after all the cycles so we can calculate the load
+    # (along a row rather than column.)
+    rocks = rotate_rocks_north_tilt(rocks_str.split("\n"))
+
+    return calculate_max_load(rocks)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--filename", action="store", default="input.txt")
+    parser.add_argument("-c", "--cycles", action="store", default=1000000000)
+    args = parser.parse_args()
+
+    filename = args.filename
+    cycles = int(args.cycles)
+
+    with open(filename) as f:
+        rocks = f.read()
+
+    print(calculate_max_load_north_tilt(rocks))
+    print(calculate_max_load_after_cycles(rocks, cycles))
