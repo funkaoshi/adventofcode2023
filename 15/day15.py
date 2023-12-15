@@ -34,11 +34,14 @@ def hashmap(commands: list[str]) -> dict[int, list[Lens]]:
 
         box_id = hash(label)
         if operation == "-":
+            # remove lens from appropriate box (if it exists)
             for i, lens in enumerate(boxes[box_id]):
                 if lens.label == label:
                     del boxes[box_id][i]
                     break
         elif operation == "=":
+            # add the lens to the appropriate box, replacing (in-place) if
+            # there is already a lens with the same label within the box
             for i, lens in enumerate(boxes[box_id]):
                 if lens.label == label:
                     boxes[box_id][i].focal_length = int(focal_length)
