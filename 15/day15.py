@@ -1,14 +1,6 @@
 import argparse
 import collections
-import dataclasses
 import re
-
-
-@dataclasses.dataclass
-class Lens:
-    label: str
-    focal_length: int
-
 
 # example commands: rn=1, cm-, qp=3
 command_re = re.compile(r"^([a-zA-Z]+)(=|-)(\d+)?$")
@@ -23,8 +15,8 @@ def hash(s: str) -> int:
     return h
 
 
-def hashmap(commands: list[str]) -> dict[int, list[Lens]]:
-    boxes: dict[int, list[Lens]] = collections.defaultdict(list)
+def hashmap(commands: list[str]) -> dict[int, dict[str, int]]:
+    boxes: dict[int, dict[str, int]] = collections.defaultdict(collections.OrderedDict)
     for command in commands:
         if match := command_re.match(command):
             label, operation, focal_length = match.groups()
@@ -35,26 +27,19 @@ def hashmap(commands: list[str]) -> dict[int, list[Lens]]:
         box_id = hash(label)
         if operation == "-":
             # remove lens from appropriate box (if it exists)
-            for i, lens in enumerate(boxes[box_id]):
-                if lens.label == label:
-                    del boxes[box_id][i]
-                    break
+            if label in boxes[box_id]:
+                del boxes[box_id][label]
         elif operation == "=":
             # add the lens to the appropriate box, replacing (in-place) if
             # there is already a lens with the same label within the box
-            for i, lens in enumerate(boxes[box_id]):
-                if lens.label == label:
-                    boxes[box_id][i].focal_length = int(focal_length)
-                    break
-            else:
-                boxes[box_id].append(Lens(label, int(focal_length)))
+            boxes[box_id][label] = int(focal_length)
         else:
             print("Invalid command {command}.")
             raise Exception
 
         # print(f"After '{command}':")
         # for i, box in boxes.items():
-        #     print(f"Box {i}: {[l + ' ' + str(f) for l, f in box]}")
+        #     print(f"Box {i}: {[l + ' ' + str(f) for l, f in box.items()]}")
 
     return boxes
 
@@ -74,8 +59,8 @@ if __name__ == "__main__":
 
     boxes = hashmap(commands)
     focal_lengths = [
-        (i + 1) * j * lens.focal_length
+        (i + 1) * j * focal_length
         for i, box in boxes.items()
-        for j, lens in enumerate(box, start=1)
+        for j, (label, focal_length) in enumerate(box.items(), start=1)
     ]
     print(f"Problem 2: {sum(focal_lengths)}")
