@@ -1,6 +1,8 @@
 import argparse
 import enum
+import functools
 from dataclasses import dataclass
+from multiprocessing.pool import Pool
 
 
 class Direction(enum.Enum):
@@ -118,25 +120,16 @@ if __name__ == "__main__":
     print(f"Problem 1: {get_energized(cave, [Vector(0, 0, Direction.right)])}")
 
     # Problem 2!!
-    max_energized = 0
-    for x in range(len(cave[0])):
-        # shoot rays of light vertically from the top and bottom
-        energized = get_energized(cave, [Vector(x, 0, Direction.down)])
-        if energized > max_energized:
-            max_energized = energized
+    with Pool() as pool:
+        starting_vectors = (
+            [[Vector(x, 0, Direction.down)] for x in range(len(cave[0]))]
+            + [[Vector(x, len(cave) - 1, Direction.up)] for x in range(len(cave[0]))]
+            + [[Vector(0, y, Direction.right)] for y in range(len(cave))]
+            + [[Vector(len(cave[0]) - 1, y, Direction.left)] for y in range(len(cave))]
+        )
+        get_energized_cave = functools.partial(get_energized, cave)
+        energized = max(
+            [result for result in pool.map(get_energized_cave, starting_vectors)]
+        )
 
-        energized = get_energized(cave, [Vector(x, len(cave) - 1, Direction.up)])
-        if energized > max_energized:
-            max_energized = energized
-
-    for y in range(len(cave)):
-        # shoot rays of light horizontally from the left and right
-        energized = get_energized(cave, [Vector(0, y, Direction.right)])
-        if energized > max_energized:
-            max_energized = energized
-
-        energized = get_energized(cave, [Vector(len(cave[0]) - 1, y, Direction.left)])
-        if energized > max_energized:
-            max_energized = energized
-
-    print(f"Problem 2: {max_energized}")
+    print(f"Problem 2: {energized}")
