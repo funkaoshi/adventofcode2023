@@ -105,11 +105,26 @@ def calculate_max_load_north_tilt(rocks_str: str) -> int:
 
 
 def calculate_max_load_after_cycles(rocks_str: str, cycles=1000000000) -> int:
-    for i in range(cycles):
+    cycle_set = []
+    skipped = False
+    i = 0
+    while i < cycles:
         rocks_str = cycle(rocks_str)
 
-        if i % 100000000 == 0:
-            print(f"Processed {i} of {cycles} iterations, {cycles - i} remaining.")
+        if not skipped:
+            if rocks_str not in cycle_set:
+                cycle_set.append(rocks_str)
+            else:
+                print(f"Found loop after {i} iterations")
+
+                loop_length = i - cycle_set.index(rocks_str) + 1
+                loops_in_cycle = cycles % loop_length
+                i = cycles - loops_in_cycle
+                skipped = True
+
+                print(f"Skip ahead to iteration {i}. {loop_length=} {loops_in_cycle=}")
+
+        i += 1
 
     # rotate our result after all the cycles so we can calculate the load
     # (along a row rather than column.)
