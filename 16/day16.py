@@ -10,7 +10,7 @@ class Direction(enum.Enum):
     down = 3
 
 
-@dataclass
+@dataclass(frozen=True)
 class Vector:
     x: int
     y: int
@@ -92,8 +92,8 @@ def get_energized(cave: list[list[str]], start: list[Vector]) -> int:
             energized.add((vector.y, vector.x))
 
             # if we've already travelled this path we don't need to do it again
-            if (vector.x, vector.y, vector.direction) not in already_travelled:
-                already_travelled.add((vector.x, vector.y, vector.direction))
+            if vector not in already_travelled:
+                already_travelled.add(vector)
                 new_start += get_next_tiles(vector, cave)
 
         if not new_start:
@@ -114,12 +114,13 @@ if __name__ == "__main__":
     with open(filename) as f:
         cave = [list(line) for line in f.read().splitlines()]
 
-    start = [Vector(0, 0, Direction.right)]
+    # Problem 1!
+    print(f"Problem 1: {get_energized(cave, [Vector(0, 0, Direction.right)])}")
 
-    print(f"Problem 1: {get_energized(cave, start)}")
-
+    # Problem 2!!
     max_energized = 0
     for x in range(len(cave[0])):
+        # shoot rays of light vertically from the top and bottom
         energized = get_energized(cave, [Vector(x, 0, Direction.down)])
         if energized > max_energized:
             max_energized = energized
@@ -129,6 +130,7 @@ if __name__ == "__main__":
             max_energized = energized
 
     for y in range(len(cave)):
+        # shoot rays of light horizontally from the left and right
         energized = get_energized(cave, [Vector(0, y, Direction.right)])
         if energized > max_energized:
             max_energized = energized
