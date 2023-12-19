@@ -73,6 +73,10 @@ def move(x: int, y: int, instruction: Instruction) -> tuple[int, int]:
     return (x, y)
 
 
+# shout out to Alan for pointing me to these formulaes, or this
+# problem would never have gotten done.
+
+
 def shoelace_algorithm(points: list[tuple[int, int]]) -> int:
     assert points[0] == points[-1]
 
@@ -115,7 +119,6 @@ if __name__ == "__main__":
     area = picks_theorem(interior_area, border)
     print(f"Problem 1 Area: {area}")
 
-    instructions = parse_plans(filename)
     new_plans = convert_plans(instructions)
     polygon = draw_trench(new_plans)
     interior_area = shoelace_algorithm(polygon)
