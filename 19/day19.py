@@ -13,17 +13,8 @@ class Operation:
 
 @dataclass
 class Workflow:
-    label: str
     operations: list[Operation]
     catch_all: str
-
-
-@dataclass
-class Part:
-    x: str
-    m: str
-    a: str
-    s: str
 
 
 def parse_operations(ops: str) -> list[Operation]:
@@ -46,8 +37,7 @@ def parse_file(file):
             label = m.group(1)
             operations = parse_operations(m.group(2))
             catch_all = m.group(3)
-            print(label, operations, catch_all)
-            workflows[label] = Workflow(label, operations, catch_all)
+            workflows[label] = Workflow(operations, catch_all)
 
     xmas_re = re.compile(r"\{x=(\d+),m=(\d+),a=(\d+),s=(\d+)\}")
     parts = []
@@ -97,9 +87,6 @@ if __name__ == "__main__":
     with open(filename) as f:
         file = f.read().splitlines() + [""]
         workflows, parts = parse_file(file)
-
-    print(workflows)
-    print(parts)
 
     accepted_parts = [part for part in parts if process_part(workflows, part)]
     print(sum([v for part in accepted_parts for v in part.values()]))
