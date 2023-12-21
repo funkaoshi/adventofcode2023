@@ -27,7 +27,7 @@ def get_neighbors(point: Point, garden_map: list[list[str]]):
     return neighbors
 
 
-def walk_garden_map(start: list[Point], garden_map: list[list[str]]):
+def walk_garden_map(start: set[Point], garden_map: list[list[str]]) -> set[Point]:
     neighbors = set()
     for point in start:
         neighbors.update(get_neighbors(point, garden_map))
@@ -54,7 +54,7 @@ if __name__ == "__main__":
                 s = Point(i, j)
                 break
 
-    visited = [s]
+    visited = set([s])
     for _ in range(count):
         visited = walk_garden_map(visited, garden_map)
 
